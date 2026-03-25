@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>CodeMaster</title>
+
+<style>
+body {
+  background: black;
+  color: #00ff9c;
+  font-family: monospace;
+  padding: 20px;
+}
+
+h1 {
+  color: #00ff9c;
+  text-shadow: 0 0 10px #00ff9c;
+}
+
+button {
+  background: black;
+  color: #00ff9c;
+  border: 1px solid #00ff9c;
+  padding: 10px;
+  margin: 5px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #00ff9c;
+  color: black;
+}
+
+textarea {
+  width: 100%;
+  height: 150px;
+  background: black;
+  color: #00ff9c;
+  border: 1px solid #00ff9c;
+  padding: 10px;
+}
+
+#output {
+  border: 1px solid #00ff9c;
+  padding: 10px;
+  margin-top: 10px;
+  min-height: 80px;
+  white-space: pre-wrap;
+}
+
+.progress {
+  margin: 10px 0;
+}
+
+.bar {
+  height: 20px;
+  background: #003b2a;
+}
+
+.fill {
+  height: 100%;
+  background: #00ff9c;
+  width: 0%;
+}
+</style>
+</head>
+
+<body>
+
+<h1>💻 CodeMaster</h1>
+
+<div class="progress">
+  Progress:
+  <div class="bar"><div id="progressFill" class="fill"></div></div>
+</div>
+
+<div>
+  <button onclick="selectLang('html')">HTML</button>
+  <button onclick="selectLang('js')">JavaScript</button>
+  <button onclick="selectLang('cpp')">C++</button>
+  <button onclick="selectLang('cs')">C#</button>
+</div>
+
+<h3 id="lessonTitle">Choose a language</h3>
+<p id="lessonText"></p>
+
+<textarea id="code"></textarea><br>
+<button onclick="runCode()">Run</button>
+<button onclick="saveCode()">Save</button>
+
+<div id="output"></div>
+
+<h3>🧠 Quiz</h3>
+<p id="question"></p>
+<div id="answers"></div>
+
+<script>
+let state = JSON.parse(localStorage.getItem("appState")) || {
+  progress: 0,
+  lang: "",
+  code: ""
+};
+
+function updateProgress(val) {
+  state.progress += val;
+  if (state.progress > 100) state.progress = 100;
+  document.getElementById("progressFill").style.width = state.progress + "%";
+  saveState();
+}
+
+function saveState() {
+  localStorage.setItem("appState", JSON.stringify(state));
+}
+
+function selectLang(lang) {
+  state.lang = lang;
+
+  const lessons = {
+    html: {
+      title: "HTML Level 1",
+      text: "Create a heading using <h1>",
+      code: "<h1>Hello</h1>"
+    },
+    js: {
+      title: "JavaScript Level 1",
+      text: "Print Hello using console.log",
+      code: "console.log('Hello')"
+    },
+    cpp: {
+      title: "C++ Level 1",
+      text: "C++ uses std::cout",
+      code: '#include <iostream>\nint main(){std::cout<<"Hello";}'
+    },
+    cs: {
+      title: "C# Level 1",
+      text: "C# uses Console.WriteLine",
+      code: 'Console.WriteLine("Hello");'
+    }
+  };
+
+  document.getElementById("lessonTitle").textContent = lessons[lang].title;
+  document.getElementById("lessonText").textContent = lessons[lang].text;
+  document.getElementById("code").value = lessons[lang].code;
+
+  loadQuiz(lang);
+  saveState();
+}
+
+function runCode() {
+  let code = document.getElementById("code").value;
+  let output = document.getElementById("output");
+
+  try {
+    if (state.lang === "js") {
+      let logs = [];
+      console.log = (msg) => logs.push(msg);
+      eval(code);
+      output.textContent = logs.join("\n");
+      updateProgress(10);
+    }
+
+    else if (state.lang === "html") {
+      let win = window.open();
+      win.document.write(code);
+      updateProgress(10);
+    }
+
+    else {
+      output.textContent = "[Simulated Output]\nHello World";
+      updateProgress(5);
+    }
+
+  } catch (e) {
+    output.textContent = "Error: " + e.message;
+  }
+}
+
+function saveCode() {
+  state.code = document.getElementById("code").value;
+  saveState();
+  alert("Code saved!");
+}
+
+function loadQuiz(lang) {
+  const quizzes = {
+    html: {
+      q: "What tag makes a heading?",
+      a: ["<p>", "<h1>", "<div>"],
+      correct: 1
+    },
+    js: {
+      q: "How do you print?",
+      a: ["print()", "echo()", "console.log()"],
+      correct: 2
+    },
+    cpp: {
+      q: "Output keyword?",
+      a: ["cout", "print", "echo"],
+      correct: 0
+    },
+    cs: {
+      q: "C# output?",
+      a: ["Console.WriteLine", "print()", "echo"],
+      correct: 0
+    }
+  };
+
+  let quiz = quizzes[lang];
+  document.getElementById("question").textContent = quiz.q;
+
+  let answersDiv = document.getElementById("answers");
+  answersDiv.innerHTML = "";
+
+  quiz.a.forEach((ans, i) => {
+    let btn = document.createElement("button");
+    btn.textContent = ans;
+    btn.onclick = () => {
+      if (i === quiz.correct) {
+        alert("Correct!");
+        updateProgress(15);
+      } else {
+        alert("Wrong!");
+      }
+    };
+    answersDiv.appendChild(btn);
+  });
+}
+
+// Load state on start
+document.getElementById("progressFill").style.width = state.progress + "%";
+if (state.code) document.getElementById("code").value = state.code;
+
+</script>
+
+</body>
+</html>
